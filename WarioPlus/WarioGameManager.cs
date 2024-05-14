@@ -13,20 +13,87 @@ using WarioPlus.Entities;
 
 namespace WarioPlus
 {
+    internal class CustomNotebookText
+    {
+        private string customSubtitle = "";
+        private string nightName = "Unknown Night";
+        private int hour = 11;
+        private string hourSuffix = "PM";
+        private bool replaceHourText;
+        private bool hidden;
+
+        public string NightName { get => nightName; }
+
+        public CustomNotebookText()
+        {
+            customSubtitle = "";
+            nightName = "";
+        }
+        public void SetHidden(bool hidden)
+        {
+            this.hidden = hidden;
+            UpdateText();
+        }
+        public void SetNight(string nightName)
+        {
+            this.nightName = nightName;
+            UpdateText();
+        }
+        public void SetReplaceHourText(bool replaceHourText)
+        {
+            this.replaceHourText = replaceHourText;
+            UpdateText();
+        }
+        public void SetSubtitle(string customSubtitle)
+        {
+            this.customSubtitle = customSubtitle;
+            UpdateText();
+        }
+        public void SetHour(int hour)
+        {
+            this.hour = hour;
+            UpdateText();
+        }
+        public void SetHour(int hour, string suffix)
+        {
+            this.hour = hour;
+            hourSuffix = suffix;
+            UpdateText();
+        }
+        public void UpdateText()
+        {
+            if (CoreGameManager.Instance == null) return;
+            CoreGameManager.Instance.GetHud(0).textBox[0].enableWordWrapping = false;
+            CoreGameManager.Instance.GetHud(0).gameObject.GetComponent<RectTransform>().sizeDelta = new Vector2(800, 200);
+            if (hidden)
+            {
+                CoreGameManager.Instance.GetHud(0).UpdateText(0, "");
+                return;
+            }
+            if (replaceHourText)
+            {
+                CoreGameManager.Instance.GetHud(0).UpdateText(0, $"{nightName} - {customSubtitle}");
+            }
+            else
+            {
+                CoreGameManager.Instance.GetHud(0).UpdateText(0, $"{nightName} - {hour} {hourSuffix}\n{customSubtitle}");
+            }
+        }
+    }
     internal class WarioGameManager : BaseGameManager
     {
-        public string nightLabel = "Unknown Night";
-        public string nightName = "Custom Night";
         public bool ReplaceHourText = false;
         public bool darkTheme = false;
         public List<MonoBehaviorNPC> behaviorNPCs = new List<MonoBehaviorNPC>();
 
+        public string nightLabel = "";
+        public string nightNo = "";
         private int currentHour = 11;
-        private string customSubtitle = "";
         private bool isWarioApparitionActive = false;
         private int closedElevators = 0;
 
         public static event Action HourChanged;
+        public CustomNotebookText flavorText = new CustomNotebookText();
 
         public WarioGameManager()
         {
@@ -39,7 +106,7 @@ namespace WarioPlus
         public override void BeginPlay()
         {
             base.BeginPlay();
-            UpdateText();
+            flavorText.SetNight(nightNo);
             if (darkTheme)
             {
                 CoreGameManager.Instance.GetHud(0).transform.Find("Item Text").GetComponent<TextMeshProUGUI>().color = Color.white;
@@ -51,8 +118,7 @@ namespace WarioPlus
             base.Update();
             if (isWarioApparitionActive)
             {
-                customSubtitle = (int)Time.time % 2 == 0 ? "ESCAPE!" : "";
-                UpdateText();
+                flavorText.SetSubtitle((int)Time.time % 2 == 0 ? "ESCAPE!" : "");
 
                 if (closedElevators > 0)
                 {
@@ -83,7 +149,6 @@ namespace WarioPlus
                     Instantiate(prefab).Initialize(room);
                 }
             }
-            UpdateText();
         }
 
         public void StartWarioApparition()
@@ -119,7 +184,8 @@ namespace WarioPlus
                 yield return base.ReturnSpawnFinal(elevator);
                 yield break;
             }
-            while (!elevator.ColliderGroup.HasPlayer) yield return null;
+            yield return new WaitUntil(() => elevator.ColliderGroup.HasPlayer);
+
             if (elevatorsToClose == 1)
             {
                 ec.audMan.FlushQueue(true);
@@ -137,14 +203,18 @@ namespace WarioPlus
             elevator.Close();
             elevatorsToClose--;
             elevatorsClosed++;
-            ec.MakeNoise(elevator.transform.position + elevator.transform.forward * 10f, 31);
+            ec.MakeNoise(elevator.transform.position + (elevator.transform.forward * 10f), 31);
             ElevatorClosed(elevator);
             yield break;
         }
         public override void ElevatorClosed(Elevator elevator)
         {
             closedElevators += 1;
-            if (!isWarioApparitionActive) return;
+            if (!isWarioApparitionActive)
+            {
+                return;
+            }
+
             ec.npcs.Where(x => x.character.Equals(EnumExtensions.GetFromExtendedName<Character>("WarioApparition")))
                 .Do(x => ((WarioApparition)x).bonusSpeed += 4f);
 
@@ -193,26 +263,26 @@ namespace WarioPlus
                     }
                 }
             }
-            UpdateText();
         }
         public override void CollectNotebooks(int count)
         {
             base.CollectNotebooks(count);
-            UpdateText();
         }
         public override void ExitedSpawn()
         {
             base.ExitedSpawn();
+
             ec.audMan.PlayRandomAudio(levelObject is WarioLevelObject ld && ld.levelintromusic != null
-                ? new SoundObject[] {ld.levelintromusic} 
+                ? new SoundObject[] { ld.levelintromusic }
                 : WarioAssets.introSounds);
+
             currentHour = 12;
-            UpdateText();
-            MiddleScreenText.GetInstance()
+
+            MiddleScreenText.GetInstance("1")
                 .SetText(nightLabel)
                 .SetColor(Color.blue)
                 .FadeInAndOut(2, 4);
-            StartCoroutine(FadeDarknessLevel(Color.white, Color.black));
+
             BeginSpoopMode();
         }
         public override void RestartLevel()
@@ -227,42 +297,54 @@ namespace WarioPlus
             }
         }
 
-        public void UpdateText()
-        {
-            CoreGameManager.Instance.GetHud(0).textBox[0].enableWordWrapping = false;
-            CoreGameManager.Instance.GetHud(0).gameObject.GetComponent<RectTransform>().sizeDelta = new Vector2(800, 200);
-
-            var hourSuffix = currentHour == 11 ? "PM" : "AM";
-            if (ReplaceHourText)
-            {
-                CoreGameManager.Instance.GetHud(0).UpdateText(0, $"{nightName} - {customSubtitle}");
-            }
-            else
-            {
-                CoreGameManager.Instance.GetHud(0).UpdateText(0, $"{nightName} - {currentHour} {hourSuffix}\n{customSubtitle}");
-            }
-        }
-
         public IEnumerator Night6Am()
         {
             ec.npcs.ToArray().Do(n => n.Despawn()); // don't use ForEach as it throws InvalidOperationException
             behaviorNPCs.ToArray().Do(n => n.Despawn());
             ec.audMan.PlayRandomAudio(WarioAssets.nightEndSounds);
-            ec.standardDarkLevel = Color.white;
-            yield return FadeDarknessLevel(Color.black, new Color(1, 1, 0.3f));
-            yield return new WaitForSecondsRealtime(8f);
+
+            ec.standardDarkLevel = Color.black;
+            ec.SetAllLights(false);
+            CoreGameManager.Instance.GetHud(0).transform.Find("Staminometer").gameObject.SetActive(false);
+            CoreGameManager.Instance.GetHud(0).transform.Find("ItemSlots").gameObject.SetActive(false);
+            CoreGameManager.Instance.GetHud(0).transform.Find("Item Text").gameObject.SetActive(false);
+            CoreGameManager.Instance.GetHud(0).transform.Find("Notebook Text").gameObject.SetActive(false);
+            MiddleScreenText.GetInstance("1")
+                .SetText("5AM")
+                .SetColor(Color.white)
+                .Fade(Color.white, 2);
+            yield return new WaitForSecondsRealtime(5f);
+            MiddleScreenText.GetInstance("1")
+                .SetText("5AM")
+                .SetColor(Color.white)
+                .Fade(Color.white.AlphaMultiplied(0), 2);
+            MiddleScreenText.GetInstance("2")
+                .SetText("6AM")
+                .SetColor(Color.white.AlphaMultiplied(0))
+                .Fade(Color.white, 2);
+            yield return FadeDarknessLevel(Color.black, new Color(1, 0.5f, 0), 3);
+            yield return new WaitForSecondsRealtime(6f);
+            CoreGameManager.Instance.GetHud(0).transform.Find("Staminometer").gameObject.SetActive(true);
+            CoreGameManager.Instance.GetHud(0).transform.Find("ItemSlots").gameObject.SetActive(true);
+            CoreGameManager.Instance.GetHud(0).transform.Find("Item Text").gameObject.SetActive(true);
+            CoreGameManager.Instance.GetHud(0).transform.Find("Notebook Text").gameObject.SetActive(true);
+            MiddleScreenText.GetInstance("2").SetText("");
+            MiddleScreenText.GetInstance("1").SetText("");
             LoadNextLevel();
         }
 
-        public IEnumerator FadeDarknessLevel(Color starting, Color target)
+        public IEnumerator FadeDarknessLevel(Color starting, Color target, float duration)
         {
-            float i = 0;
-            while (i < 1)
+            float tick = 0;
+            while (tick < duration)
             {
-                ec.standardDarkLevel = Color.Lerp(starting, target, i);
-                Shader.SetGlobalColor("_SkyboxColor", Color.Lerp(starting, target, i));
-                ec.SetAllLights(true);
-                i += Time.deltaTime / 4f;
+                ec.standardDarkLevel = Color.Lerp(starting, target, tick / duration);
+                Shader.SetGlobalColor("_SkyboxColor", Color.Lerp(starting, target, tick / duration));
+                foreach (Cell cell in ec.lights)
+                {
+                    ec.SetLight(cell.lightOn, cell);
+                }
+                tick += Time.deltaTime / 4f;
                 yield return null;
             }
             yield break;
@@ -270,9 +352,10 @@ namespace WarioPlus
 
         public IEnumerator NightTimer()
         {
+            flavorText.SetHour(currentHour, "AM");
             for (int h = 1; h <= 6; h++)
             {
-                var timer = 32f;
+                var timer = 1f;
                 while (timer > 0)
                 {
                     timer -= Time.deltaTime * ec.EnvironmentTimeScale;
@@ -280,10 +363,16 @@ namespace WarioPlus
                 }
                 currentHour = h;
                 HourChanged.Invoke();
-                UpdateText();
+                flavorText.SetHour(currentHour);
             }
-            if (levelObject is WarioLevelObject ld && ld.warioApparitionEnabled) StartWarioApparition();
-            else yield return Night6Am();
+            if (levelObject is WarioLevelObject ld && ld.warioApparitionEnabled)
+            {
+                StartWarioApparition();
+            }
+            else
+            {
+                yield return Night6Am();
+            }
             yield break;
         }
 

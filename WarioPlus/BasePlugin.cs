@@ -4,13 +4,10 @@ using MTM101BaldAPI;
 using MTM101BaldAPI.AssetTools;
 using MTM101BaldAPI.ObjectCreation;
 using MTM101BaldAPI.Registers;
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 using WarioPlus.Characters;
 using WarioPlus.Characters.Basic;
 using WarioPlus.Entities;
@@ -58,18 +55,13 @@ namespace WarioPlus
                 => new WeightedTexture2D[] { new WeightedTexture2D() { selection = tex, weight = 100 } };
             
             var manager = scene.GetManager<WarioGameManager>();
-            if (nighttype == NightType.Main)
+               
+            manager.nightNo = $"Night {nightNo} ";
+            manager.nightLabel = nightNo switch
             {
-                manager.nightLabel = $"Night {nightNo} - ";
-                manager.nightLabel += nightNo switch
-                {
-                    5 => "The Cellar",
-                    _ => "The Schoolhouse",
-                };
-
-                manager.nightName = $"Night {nightNo} ";
-            }
-
+                5 => "The Cellar",
+                _ => "The Schoolhouse",
+            };
             if (scene.levelObject is WarioLevelObject ld)
             {
                 if (nightNo == 3)

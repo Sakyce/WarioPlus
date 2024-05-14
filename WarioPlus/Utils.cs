@@ -20,7 +20,7 @@ namespace WarioPlus
             {
                 return (Manager)scene.manager;
             }
-            catch (InvalidCastException e)
+            catch (InvalidCastException)
             {
                 return null;
             }
@@ -30,7 +30,7 @@ namespace WarioPlus
             var textures = new List<Texture2D>();
             for (int i = range.Item1; i <= range.Item2; i++)
             {
-                textures.Add(AssetLoader.TextureFromMod(mod, String.Format(pattern, i)));
+                textures.Add(AssetLoader.TextureFromMod(mod, string.Format(pattern, i)));
             }
             return textures.ToArray();
         }
@@ -102,8 +102,7 @@ namespace WarioPlus
         }
         public SceneObjectBuilder SetManager<Manager>() where Manager : BaseGameManager
         {
-            var managerObj = new GameObject();
-            managerObj.name = scene.name + "_Manager";
+            var managerObj = new GameObject { name = scene.name + "_Manager" };
             managerObj.ConvertToPrefab(true);
             Object.DontDestroyOnLoad(managerObj);
 

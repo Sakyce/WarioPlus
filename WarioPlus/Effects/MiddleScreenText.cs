@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections;
 using TMPro;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace WarioPlus.Effects
 {
@@ -12,18 +8,15 @@ namespace WarioPlus.Effects
     {
         private TextMeshProUGUI textbox;
 
-        public static MiddleScreenText GetInstance()
+        public static MiddleScreenText GetInstance(string name)
         {
-            var obj = CoreGameManager.Instance.GetHud(0).transform.Find("ModdedMiddleScreenText");
-            if (obj != null)
-                return obj.GetComponent<MiddleScreenText>();
-            else
-                return Create();
+            var obj = CoreGameManager.Instance.GetHud(0).transform.Find(name);
+            return obj != null ? obj.GetComponent<MiddleScreenText>() : Create(name);
         }
-        public static MiddleScreenText Create() {
+        public static MiddleScreenText Create(string name) {
             var parent = CoreGameManager.Instance.GetHud(0).transform;
             var copy = Instantiate(parent.Find("Notebook Text"));
-            copy.name = "ModdedMiddleScreenText";
+            copy.name = name;
 
             var comp = copy.gameObject.AddComponent<MiddleScreenText>();
             comp.textbox = copy.GetComponent<TextMeshProUGUI>();
@@ -61,7 +54,11 @@ namespace WarioPlus.Effects
             yield break;
         }
 
-        public void Fade(Color target, float duration) => StartCoroutine(FadeTimer(target, duration));
+        public void Fade(Color target, float duration)
+        {
+            StartCoroutine(FadeTimer(target, duration));
+        }
+
         private IEnumerator FadeTimer(Color target, float duration)
         {
             var delay = 0f;

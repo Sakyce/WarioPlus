@@ -1,11 +1,7 @@
-﻿using Mono.Cecil;
-using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using UnityEngine;
-using UnityEngine.Assertions;
 
 namespace WarioPlus.Items
 {
@@ -42,7 +38,7 @@ namespace WarioPlus.Items
     {
         private readonly Fog fog = new Fog() { color = Color.black + new Color(0.02f,0.02f,0.05f), maxDist = 50, startDist = 30, priority = int.MaxValue - 1, strength = 0.5f};
         private readonly Fog fastFog = new Fog() { color = Color.black, maxDist = 12, startDist = 0, priority = int.MaxValue, strength = 1f};
-        private List<NavigationState_WanderFleeOverride> fleeStates = new List<NavigationState_WanderFleeOverride>();
+        private readonly List<NavigationState_WanderFleeOverride> fleeStates = new List<NavigationState_WanderFleeOverride>();
         private DijkstraMap dijkstraMap;
 
         public override bool Use(PlayerManager pm)
@@ -83,7 +79,7 @@ namespace WarioPlus.Items
 
     internal class ITM_PocketWatch : Item
     {
-        private TimeScaleModifier timescale = new TimeScaleModifier() { environmentTimeScale = 0.5f, npcTimeScale = 0.5f };
+        private readonly TimeScaleModifier timescale = new TimeScaleModifier() { environmentTimeScale = 0.5f, npcTimeScale = 0.5f };
         public override bool Use(PlayerManager pm)
         {
             this.pm = pm;
