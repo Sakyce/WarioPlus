@@ -355,7 +355,7 @@ namespace WarioPlus
             flavorText.SetHour(currentHour, "AM");
             for (int h = 1; h <= 6; h++)
             {
-                var timer = 1f;
+                var timer = 10f;
                 while (timer > 0)
                 {
                     timer -= Time.deltaTime * ec.EnvironmentTimeScale;

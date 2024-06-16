@@ -17,20 +17,6 @@
 		https://nuget.samboy.dev/v3/index.json
 	</RestoreAdditionalProjectSources>
   </PropertyGroup>
-	
-	<!-- Post-build event for Debug configuration, copies the dll and the pdb of the mod into Bepinex/plugins for quick testing -->
-	<Target Name="PostBuildEventDebug" AfterTargets="PostBuildEvent" Condition="'$(Configuration)' == 'Debug'">
-		<Message Text="Debug post-build event running..." Importance="high" />
-		<Exec Command="echo F|xcopy /Y &quot;$(MSBuildProjectDirectory)\$(OutDir)$(AssemblyName).dll&quot; &quot;$(PluginGamePath)$(AssemblyName)\$(AssemblyName).dll&quot;" />
-		<Exec Command="echo F|xcopy /Y &quot;$(MSBuildProjectDirectory)\$(OutDir)$(AssemblyName).pdb&quot; &quot;$(PluginGamePath)$(AssemblyName)\$(AssemblyName).pdb&quot;" />
-	</Target>
-
-	<!-- Post-build event for Release configuration -->
-	<Target Name="PostBuildEventRelease" AfterTargets="PostBuildEvent" Condition="'$(Configuration)' == 'Release'">
-		<Message Text="Release post-build event running..." Importance="high" />
-		<Exec Command="echo F|xcopy /Y &quot;$(MSBuildProjectDirectory)\$(OutDir)$(AssemblyName).dll&quot; &quot;$(PluginGamePath)$(AssemblyName)\$(AssemblyName).dll&quot;" />
-		<Exec Command="echo F|xcopy /Y &quot;$(MSBuildProjectDirectory)\$(OutDir)$(AssemblyName).pdb&quot; &quot;$(PluginGamePath)$(AssemblyName)\$(AssemblyName).pdb&quot;" />
-	</Target>
     
 	<!-- Packages dependencies for Bepinex and Unity-->
 	<ItemGroup>

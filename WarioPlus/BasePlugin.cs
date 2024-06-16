@@ -40,7 +40,7 @@ namespace WarioPlus
             LoadingEvents.RegisterOnAssetsLoaded(Info, delegate
             {
 #if DEBUG
-                StartNight(mainNights[4]);
+                StartNight(mainNights[2]);
 #endif
             }, true);
 
