@@ -1,3 +1,4 @@
+#!/bin/bash
 BALDI_DIRECTORY="/mnt/niko/SteamLibrary/steamapps/common/Baldi's Basics Plus/"
 dotnet build --configuration Debug
 
